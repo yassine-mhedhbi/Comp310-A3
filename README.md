@@ -1,5 +1,5 @@
 # Comp310-A3
-Assignment 3 for comp 310: Opearing systems. (Phase 1)
+Assignment 3 for comp 310: Operating systems. (Phase 1)
 
 
 ### The TODO List short notes:
