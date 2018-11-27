@@ -15,3 +15,11 @@ Assignment 3 for comp 310: Operating systems. (Phase 1)
 ###### 5) done and check notes.
 
 ###### 6) no it doesn't, the UTS namesapce isolates the hostname and domain
+
+###### 7) Yes, there is no reason to not be able to. The step before chroot only creates a new root filesystem.
+
+###### 8) Yes, we can.
+
+###### 9) No, chroot changes the apparent root directory for the current process and its children. However, if they are nested, they we can from the parent to the child, we can create delete files from the parent and see them in the child root.
+
+
