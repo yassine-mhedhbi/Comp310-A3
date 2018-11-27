@@ -12,4 +12,6 @@ Assignment 3 for comp 310: Operating systems. (Phase 1)
 
 ###### 4) I Couldn't see the processes running in the different namespace nor found out about its existence. also the inode number for Pid_for_children is different. Unless by coincident there were processes from the different containers with same pid, You can't kill a process running in a different container unless you do it from the host.
 
-###### 5) 
+###### 5) done and check notes.
+
+###### 6) no it doesn't, the UTS namesapce isolates the hostname and domain
