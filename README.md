@@ -27,3 +27,4 @@ Assignment 3 for comp 310: Operating systems. (Phase 1)
 ###### 11) program crashes sooner (depends on the limit set on memory.limit_in_bytes) for 1000000 bytes, 85 allocations.
 
 ###### 12) first chage the cpu.share ratio in both container and add the corresponding pid to tasks file in the two different cgroup controllers. make sure to run it on 1 core and 2 memory nodes. Stress command so cpu share is visible on the host from the top or htop. 
+![selection_037](https://user-images.githubusercontent.com/22268613/49197518-2ac71b80-f35d-11e8-8d6f-0045b5713dfa.png)
