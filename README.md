@@ -22,4 +22,8 @@ Assignment 3 for comp 310: Operating systems. (Phase 1)
 
 ###### 9) No, chroot changes the apparent root directory for the current process and its children. However, if they are nested, they we can from the parent to the child, we can create delete files from the parent and see them in the child root.
 
+###### 10) monitoring the memory through htop => memeory usage % keeps on increasing, 1% -> 6600 allocations.
 
+###### 11) program crashes sooner (depends on the limit set on memory.limit_in_bytes) for 1000000 bytes, 85 allocations.
+
+###### 12) first chage the cpu.share ratio in both container and add the corresponding pid to tasks file in the two different cgroup controllers. make sure to run it on 1 core and 2 memory nodes. Stress command so cpu share is visible on the host from the top or htop. 
