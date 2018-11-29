@@ -28,3 +28,8 @@ Assignment 3 for comp 310: Operating systems. (Phase 1)
 
 ###### 12) first chage the cpu.share ratio in both container and add the corresponding pid to tasks file in the two different cgroup controllers. make sure to run it on 1 core and 2 memory nodes. Stress command so cpu share is visible on the host from the top or htop. 
 ![selection_037](https://user-images.githubusercontent.com/22268613/49197518-2ac71b80-f35d-11e8-8d6f-0045b5713dfa.png)
+
+###### 13 & 14) ![selection_038](https://user-images.githubusercontent.com/22268613/49198640-176a7f00-f362-11e8-9d9f-8e79b4dbe035.png)
+###### lsblk list the block devices with major:minor number. use the root sda partition number to change the read and write bytes per second on blkio.throttle.read_bps_device and blkio.throttle.write_bps_device.
+###### For testing : [Write] $ dd if=/dev/zero of=file_1 bs=1M count=4000 oflag=direct 
+######               [Read]  $ dd if=file_1 of=/dev/null bs=1M count=4000 oflag=direct
