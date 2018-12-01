@@ -29,10 +29,74 @@ struct cgroup_setting self_to_task = {
  *      in the comments for the main() below
  *  ------------------------------------------------------
  **/ 
-struct cgroups_control *cgroups[5] = {
+struct cgroups_control *cgroups[6] = {
+
+	// Memory
+	& (struct cgroups_control) {
+		.control = CGRP_MEMORY_CONTROL,
+		.settings = (struct cgroup_setting *[8]) {
+			/*
+			& (struct cgroup_setting) {
+				.name = "memory.limit_in_bytes",
+				.value = MEMORY
+			},
+			& (struct cgroup_setting) {
+				.name = "memory.kmem.limit_in_bytes",
+				.value = MEMORY
+			},*/
+			&self_to_task,             // must be added to all the new controls added
+			NULL                       // NULL at the end of the array
+		}
+	},
+
+	// CPU 
+	& (struct cgroups_control) {
+		.control = CGRP_CPU_CONTROL,
+		.settings = (struct cgroup_setting *[8]) {
+			/*
+			& (struct cgroup_setting) {
+				.name = "cpu.shares",
+				.value = CPU_SHARES
+			},
+			*/
+			&self_to_task,             // must be added to all the new controls added
+			NULL                       // NULL at the end of the array
+		}
+	},
+
+	// Cpuset
+	& (struct cgroups_control) {
+		.control = CGRP_CPU_SET_CONTROL,
+		.settings = (struct cgroup_setting *[8]) {
+			/*
+			& (struct cgroup_setting) {
+				.name = "blkio.weight",
+				.value = "64"
+			},
+			*/
+			&self_to_task,             // must be added to all the new controls added
+			NULL                       // NULL at the end of the array
+		}
+	},
+		// PIDs
+	& (struct cgroups_control) {
+		.control = CGRP_PIDS_CONTROL,
+		.settings = (struct cgroup_setting *[8]) {
+			/*
+			& (struct cgroup_setting) {
+				.name = "pids.max",
+				.value = PIDS
+			},
+			*/
+			&self_to_task,             // must be added to all the new controls added
+			NULL                       // NULL at the end of the array
+		}
+	},
+		// blkio
 	& (struct cgroups_control) {
 		.control = CGRP_BLKIO_CONTROL,
-		.settings = (struct cgroup_setting *[]) {
+		.settings = (struct cgroup_setting *[8]) {
+
 			& (struct cgroup_setting) {
 				.name = "blkio.weight",
 				.value = "64"
@@ -41,7 +105,8 @@ struct cgroups_control *cgroups[5] = {
 			NULL                       // NULL at the end of the array
 		}
 	},
-	NULL                               // NULL at the end of the array
+	NULL
+	                             // NULL at the end of the array
 };
 
 
@@ -75,8 +140,9 @@ int main(int argc, char **argv)
     pid_t child_pid = 0;
     int last_optind = 0;
     bool found_cflag = false;
-    while ((option = getopt(argc, argv, "c:m:u:")))
-    {
+    while ((option = getopt(argc, argv, "c:m:u:C:s:p:M:r:w:H:")))
+    {	
+    	int i = 0;
         if (found_cflag)
             break;
 
@@ -98,6 +164,78 @@ int main(int argc, char **argv)
                 return EXIT_FAILURE;
             }
             break;
+        case 'C':
+        	while (i<8){
+        		if (cgroups[1].settings[i] == NULL) break;
+        		else if (!strcmp(cgroups[1].settings[i].name, "cpu.shares")){break;}
+        		i = i + 1;
+        		}	
+        	cgroups[1].settings[i] = struct cgroup_setting {	
+					.name = "cpu.shares",
+					.value = CPU_SHARES
+				}
+ 			
+
+            break;
+        case 's':
+        	while (i<8){
+        		if (cgroups[1].settings[i] == NULL) break;
+        		else if (!strcmp(cgroups[1].settings[i].name, "cpuset.mem")){break;}
+        		i = i + 1;
+        	}
+        	cgroups[2].settings[i] = struct cgroup_setting {	
+					.name = "cpuset.mem",
+					.value = 0
+				}     
+            break;
+        case 'M':    		
+        	while (i<8){
+        		if (cgroups[0].settings[i] == NULL) break;
+        		else if ( strcmp(cgroups[1].settings[i].name, "memory.limit_in_bytes") == 0){break;}
+        		i = i + 1;
+        	}
+        	cgroups[1].settings[i] = struct cgroup_setting {	
+					.name = "memory.limit_in_bytes",
+					.value = MEMORY
+				}
+				cgroups[1].settings[i] = struct cgroup_setting {	
+					.name = "memory.kmem.limit_in_bytes",
+					.value = MEMORY
+				}
+            break;       	
+       	case 'p':       		
+       		while (i<8){
+        		if (cgroups[3].settings[i] == NULL) break;
+        		else if (!strcmp(cgroups[1].settings[i].name, "pids.max")){break;}
+        		i = i + 1;
+        	}
+
+        	
+        		cgroups[1].settings[i] = struct cgroup_setting {	
+					.name = "pids.max",
+					.value = PIDS
+				}
+        case 'r':        	
+         	while (i<8){
+        		if (cgroups[1].settings[i] == NULL) break;
+        		else if ( strcmp(cgroups[1].settings[i].name, "blkio.throttle.read_bps_device") == 0){break;}
+        		i = i + 1;
+        	}
+        		cgroups[1].settings[i] = struct cgroup_setting {	
+					.name = "blkio.throttle.read_bps_device",
+					.value = 1000000
+				} 			
+        case 'w':
+        	while (i<8){
+        		if (cgroups[1].settings[i] == NULL) break;
+        		i = i + 1;
+        	}
+        	cgroups[1].settings[i] = struct cgroup_setting {	
+				.name = "blkio.throttle.read_bps_device",
+				.value = 1000000
+			}
+        case 'H':
+        	continue;
         default:
             cleanup_stuff(argv, sockets);
             return EXIT_FAILURE;
@@ -159,7 +297,7 @@ int main(int argc, char **argv)
      * This method here is creating the control groups using the 'cgroups' array
      * Make sure you have filled in this array with the correct values from the command line flags 
      * Nothing to write here, just caution to ensure the array is filled
-     * ------------------------------------------------------
+     * ------------------------------------------------------ 
      **/
     if (setup_cgroup_controls(&config, cgroups))
     {
