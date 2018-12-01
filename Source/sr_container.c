@@ -113,6 +113,7 @@ int main(int argc, char **argv)
     pid_t child_pid = 0;
     int last_optind = 0;
     bool found_cflag = false;
+    char *child_stack;
     while ((option = getopt(argc, argv, "c:m:u:C:s:p:M:r:w:H:")))
     {
         int i = 0;
@@ -323,7 +324,21 @@ int main(int argc, char **argv)
      * ------------------------------------------------------
      **/
 
-        // You code for clone() goes here
+    // Make child stack
+    child_stack = malloc(STACK_SIZE);
+    if (child_stack == NULL) {
+        fprintf("malloc failed: %m\n");
+        cleanup_sockets(sockets);
+        return EXIT_FAILURE;
+    }
+
+    // Clone
+    child_pid = clone(
+                        child_function,
+                        child_stack,
+                        SIGCHLD | CLONE_NEWCGROUP | CLONE_NEWIPC | CLONE_NEWNS | CLONE_NEWPID | CLONE_NEWUTS | CLONE_NEWNET,
+                        config
+                    );
 
     /**
      *  ------------------------------------------------------
