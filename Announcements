@@ -1,0 +1,85 @@
+IMPORTANT:: The original assignment handout asks you to experiment "network-cgroup controller". This is NOT required and we have removed it. We have replaced it with "pid-cgroup controller". Following is the excerpt from the 
+handout that is changed.
+
+"We will let controlling other resources such as block-io and (delete: network) (add: pids) as a practice for you to try. We will ask about this on the viva session for grading this assignment."
+
+---
+
+I have uploaded the template code and the description for Phase 2 of this assignment under the same assignment link.
+
+Please download the package 'A3Template.zip' to get started. You should find a pdf 'SRContainer-Phase2' inside this zip-file that explains what to do. 
+
+Phase-1 was designed to give you'll a playground experience to use existing tools (eg: unshare) to create and experiment with namespaces.
+
+Phase-2 is targetted towards giving a hands-on feel as to writing containers from scratch in C using a set of system calls. We have provided you with almost all of the setup and code required. You just have to fill in some portions 
+of the code as explained in the handout. There are 5 things to complete. The explanation should be sufficient to fully complete this assignment. Pay attention to all comments in the given code to get more clarity. Follow through 
+the code to understand what is being done. Fill in the left out portions accordingly and you should have your own container instance ready to run.
+
+---
+
+For writing to the tasks file with a newly created cgroup must be:
+"echo [pid] > tasks"
+
+If you are adding to the tasks file from inside the unshare()’ed ‘/bin/bash’ process then you can do: "echo 0 > tasks"
+0 is a special identifier that says to put itself into the tasks list.
+
+If you are adding to the tasks file of the cgroup from your host (docker container) then it must be the PID of the “/bin/bash (or whatever process)” that was unshare()’ed.
+You can get this by running: ps aux | grep /bin/bash
+Out of the things it lists you will see 4 processes related to your unshare command.
+The first process is the sudo command that you ran
+The second process is the unshare command ran by the sudo command
+The third is the actual bash program run by your unshare command
+The fourth (there is another one below /bin/bash with “-i”) is the one run by your chroot.
+
+The 1st and 2nd are in the original namespace
+The 3rd and 4th are in the new namespace
+
+Ideally, you must be using the PID of the 4th one “/bin/bash -i” because that's the process you want to enforce the cgroup on.
+
+If you took the first approach "echo 0 > tasks", what you see inside the tasks file from the host will be the PID of this 4th process.
+
+---
+
+Changes to handout and template code:
+
+blkio-weight was removed from the input flags and memory was added as one. (See the change in the comment above main - Important)
+the SCMP_ACT_KILL flag was changed to SCMP_FAIL in the sample system call -filter code provided (Important)
+a description was added as to how you can verify your "capabilities" implementation is working
+proc mount code was added to support commands like ps and top. (Unimportant)
+
+---
+
+The interview is targetted towards evaluating your understanding of Linux processes, namespaces, cgroups and the steps explained in the handout.
+You will also be asked to demonstrate some things on the cs310 server and questioned about certain things that are observed.
+You don't have to memorize all the commands. You can bring some notes to remind you of the commands that you think are important.
+
+---
+
+Hi All,
+
+Here are some clarifications about the 2nd phase of A3 based on conversations with some students:
+
+1. You can change the size of the cgroups array to 6.
+
+2. The only mandatory flags for the program to run are: -m, -u, -H and -c 
+(this doesn't mean you don't have to implement the other flags. It just means these are the minimal flags with which you can run the container.)
+
+3. None of the cgroups shall have default values (except the given blkio.weight example) when no flags are used. The cgroups must be filled into the array only if a given flag is passed in as an argument. If not there are no 
+resource restrictions on the container.
+
+4. For the blkio.weight,  if an additional blkio setting needs to be added, you can replace the existing cgroup_control inside the array with a newly created struct. If you deduce a better way then that is also fine.
+
+5. For cpuset.mem, you can set the setting '0' internally when you set the cgroups for cpusets since there is no flag that takes in this param.
+
+A minimalistic SNR_CONTAINER could be built by just implementing the "-H" flag in step (1) and completing steps (2) and (3). This should give you a runnable container. With these portions done you can run the container like:
+
+./SNR_CONTAINER -m <$ROOTFS> -u 1 -H <some_hostname> -c /bin/bash
+
+For info on how the flags are interpreted, please go through the code (and man-page for getopt) and try to understand what's happening.
+
+PS:
+If you are trying to compile the program in your own PC/VM then you must install the following packages: libseccomp2, libseccomp-dev, libcap-dev
+You can't compile it in any of the SOCS servers, other than cs310.cs.mcgill.ca since those packages are not installed.
+
+Best
+Shabir 
