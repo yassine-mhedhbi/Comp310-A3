@@ -16,8 +16,8 @@ int switch_child_root(const char *new_root, const char *put_old)
      *  ------------------------ TODO ------------------------
      *  Simply use the "pivot_root()" system call to switch child's root to the new root
      *  ------------------------------------------------------
-     * */ 
-    return 0;
+     * */
+    return syscall(SYS_pivot_root, new_root, put_old);
 }
 
 /**
@@ -25,7 +25,7 @@ int switch_child_root(const char *new_root, const char *put_old)
  *      This method is for altering child capabilities
  *      Complete this method as described in the assingment handout to disable a list of capabilities
  * ------------------------------------------------------
- **/ 
+ **/
 int setup_child_capabilities()
 {
     /**
@@ -33,7 +33,7 @@ int setup_child_capabilities()
      *      Copy the binary 'capsh' found inside the [/sbin] folder of the docker container
      *          into the [/sbin] folder of the 'rootfs' you downloaded to run containers
      *              cp /sbin/capsh $ROOTFS/sbin/
-     *  
+     *
      *  Now if you run 'capsh --print' without this method implemented the output for [Bounding set]
      *      will indicate many capabilities. But after properly implementing this method if you run the same
      *      command inside your container you will see a smaller set of capabilities for [Bounding set]
@@ -46,7 +46,7 @@ int setup_child_capabilities()
  *      This method is for restricting system_calls from within the container
  *      Complete this method as described in the assingment handout to restrict a list of system calls
  * ------------------------------------------------------
- **/ 
+ **/
 int setup_syscall_filters()
 {
     return 0;
@@ -112,7 +112,7 @@ int setup_child_mounts(struct child_config *config)
         fprintf(stderr, "invocation to rmdir() failed! %m\n");
         return -1;
     }
-    
+
     if (mount(NULL, "/proc", "proc", 0, NULL)) {
 		fprintf(stderr, "attempt to mount proc failed!\n");
 		return -1;
