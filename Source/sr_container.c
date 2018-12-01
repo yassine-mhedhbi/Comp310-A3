@@ -148,7 +148,7 @@ int main(int argc, char **argv)
 
             cgroups[1].settings[i] = & (struct cgroup_setting) {
                 .name = "cpu.shares",
-                .value = CPU_SHARES
+                .value = optarg
             };
 
             cgroups[1].settings[i+1] = NULL;
@@ -157,14 +157,18 @@ int main(int argc, char **argv)
             while (i<8){
                 if (cgroups[2].settings[i] == NULL)
                     break;
-                else if (strcmp(cgroups[2].settings[i].name, "cpuset.mem") == 0)
+                else if (strcmp(cgroups[2].settings[i].name, "cpuset.cpus") == 0)
                     break;
                 i++;
             }
 
             cgroups[2].settings[i] = & (struct cgroup_setting) {
+                .name = "cpuset.cpus",
+                .value = optarg
+            };
+            cgroups[2].settings[i] = & (struct cgroup_setting) {
                 .name = "cpuset.mem",
-                .value = 0
+                .value = "0"
             };
 
             cgroups[2].settings[i+1] = NULL;
@@ -179,11 +183,11 @@ int main(int argc, char **argv)
             }
             cgroups[0].settings[i] = & (struct cgroup_setting) {
                 .name = "memory.limit_in_bytes",
-                .value = MEMORY
+                .value = optarg
             };
             cgroups[0].settings[i+1] = & (struct cgroup_setting) {
                 .name = "memory.kmem.limit_in_bytes",
-                .value = MEMORY
+                .value = optarg
             };
 
             cgroups[0].settings[i+2] = NULL;
@@ -199,7 +203,7 @@ int main(int argc, char **argv)
 
             cgroups[3].settings[i] = & (struct cgroup_setting) {
                 .name = "pids.max",
-                .value = PIDS
+                .value = optarg
             };
 
             cgroups[3].settings[i+1] = NULL;
@@ -214,7 +218,7 @@ int main(int argc, char **argv)
             }
             cgroups[4].settings[i] = & (struct cgroup_setting) {
                 .name = "blkio.throttle.read_bps_device",
-                .value = 1000000
+                .value = optarg
             };
 
             cgroups[4].settings[i+1] = NULL;
@@ -229,13 +233,14 @@ int main(int argc, char **argv)
             }
             cgroups[4].settings[i] = & (struct cgroup_setting) {
                 .name = "blkio.throttle.write_bps_device",
-                .value = 1000000
+                .value = optarg
             };
 
             cgroups[4].settings[i+1] = NULL;
             break;
         case 'H':
-            continue;
+            config.hostname = optarg;
+            break;
         default:
             cleanup_stuff(argv, sockets);
             return EXIT_FAILURE;
