@@ -113,7 +113,7 @@ int main(int argc, char **argv)
     pid_t child_pid = 0;
     int last_optind = 0;
     bool found_cflag = false;
-    char *child_stack;
+    char *stack;
     while ((option = getopt(argc, argv, "c:m:u:C:s:p:M:r:w:H:")))
     {
         int i = 0;
@@ -140,104 +140,122 @@ int main(int argc, char **argv)
             break;
         case 'C':
             while (i<8) {
-                if (cgroups[1].settings[i] == NULL)
+                if (cgroups[1]->settings[i] == NULL)
                     break;
-                else if (strcmp(cgroups[1].settings[i].name, "cpu.shares") == 0)
+                else if (strcmp(cgroups[1]->settings[i]->name, "cpu.shares") == 0)
                     break;
                 i++;
             }
 
-            cgroups[1].settings[i] = & (struct cgroup_setting) {
+            cgroups[1]->settings[i] = & (struct cgroup_setting) {
                 .name = "cpu.shares",
-                .value = optarg
+                .value = ""
             };
 
-            cgroups[1].settings[i+1] = NULL;
+            stpcpy(cgroups[1]->settings[i]->value, optarg);
+
+            cgroups[1]->settings[i+1] = NULL;
             break;
         case 's':
             while (i<8){
-                if (cgroups[2].settings[i] == NULL)
+                if (cgroups[2]->settings[i] == NULL)
                     break;
-                else if (strcmp(cgroups[2].settings[i].name, "cpuset.cpus") == 0)
+                else if (strcmp(cgroups[2]->settings[i]->name, "cpuset.cpus") == 0)
                     break;
                 i++;
             }
 
-            cgroups[2].settings[i] = & (struct cgroup_setting) {
+            cgroups[2]->settings[i] = & (struct cgroup_setting) {
                 .name = "cpuset.cpus",
-                .value = optarg
+                .value = ""
             };
-            cgroups[2].settings[i] = & (struct cgroup_setting) {
+
+            stpcpy(cgroups[2]->settings[i]->value, optarg);
+
+            cgroups[2]->settings[i+1] = & (struct cgroup_setting) {
                 .name = "cpuset.mem",
                 .value = "0"
             };
 
-            cgroups[2].settings[i+1] = NULL;
+            cgroups[2]->settings[i+2] = NULL;
             break;
         case 'M':
             while (i<8){
-                if (cgroups[0].settings[i] == NULL)
+                if (cgroups[0]->settings[i] == NULL)
                     break;
-                else if (strcmp(cgroups[0].settings[i].name, "memory.limit_in_bytes") == 0)
+                else if (strcmp(cgroups[0]->settings[i]->name, "memory.limit_in_bytes") == 0)
                     break;
                 i++;
             }
-            cgroups[0].settings[i] = & (struct cgroup_setting) {
+            cgroups[0]->settings[i] = & (struct cgroup_setting) {
                 .name = "memory.limit_in_bytes",
-                .value = optarg
-            };
-            cgroups[0].settings[i+1] = & (struct cgroup_setting) {
-                .name = "memory.kmem.limit_in_bytes",
-                .value = optarg
+                .value = ""
             };
 
-            cgroups[0].settings[i+2] = NULL;
+            stpcpy(cgroups[0]->settings[i]->value, optarg);
+
+            cgroups[0]->settings[i+1] = & (struct cgroup_setting) {
+                .name = "memory.kmem.limit_in_bytes",
+                .value = ""
+            };
+
+            stpcpy(cgroups[0]->settings[i+1]->value, optarg);
+
+            cgroups[0]->settings[i+2] = NULL;
             break;
         case 'p':
             while (i<8){
-                if (cgroups[3].settings[i] == NULL)
+                if (cgroups[3]->settings[i] == NULL)
                     break;
-                else if (strcmp(cgroups[3].settings[i].name, "pids.max") == 0)
+                else if (strcmp(cgroups[3]->settings[i]->name, "pids.max") == 0)
                     break;
                 i++;
             }
 
-            cgroups[3].settings[i] = & (struct cgroup_setting) {
+            cgroups[3]->settings[i] = & (struct cgroup_setting) {
                 .name = "pids.max",
-                .value = optarg
+                .value = ""
             };
 
-            cgroups[3].settings[i+1] = NULL;
+            stpcpy(cgroups[3]->settings[i]->value, optarg);
+
+            cgroups[3]->settings[i+1] = NULL;
             break;
         case 'r':
             while (i<8){
-                if (cgroups[4].settings[i] == NULL)
+                if (cgroups[4]->settings[i] == NULL)
                     break;
-                else if (strcmp(cgroups[4].settings[i].name, "blkio.throttle.read_bps_device") == 0)
+                else if (strcmp(cgroups[4]->settings[i]->name, "blkio.throttle.read_bps_device") == 0)
                     break;
                 i++;
             }
-            cgroups[4].settings[i] = & (struct cgroup_setting) {
+
+            cgroups[4]->settings[i] = & (struct cgroup_setting) {
                 .name = "blkio.throttle.read_bps_device",
-                .value = optarg
+                .value = ""
             };
 
-            cgroups[4].settings[i+1] = NULL;
+            stpcpy(cgroups[4]->settings[i]->value, optarg);
+
+            cgroups[4]->settings[i+1] = NULL;
             break;
         case 'w':
             while (i<8){
-                if (cgroups[4].settings[i] == NULL)
+                if (cgroups[4]->settings[i] == NULL)
                     break;
-                else if (strcmp(cgroups[4].settings[i].name, "blkio.throttle.write_bps_device") == 0)
+                else if (strcmp(cgroups[4]->settings[i]->name, "blkio.throttle.write_bps_device") == 0)
                     break;
                 i++;
             }
-            cgroups[4].settings[i] = & (struct cgroup_setting) {
+
+            cgroups[4]->settings[i] = & (struct cgroup_setting) {
                 .name = "blkio.throttle.write_bps_device",
-                .value = optarg
+                .value = ""
             };
 
-            cgroups[4].settings[i+1] = NULL;
+            stpcpy(cgroups[4]->settings[i]->value, optarg);
+
+            cgroups[4]->settings[i+1] = NULL;
             break;
         case 'H':
             config.hostname = optarg;
@@ -325,9 +343,9 @@ int main(int argc, char **argv)
      **/
 
     // Make child stack
-    child_stack = malloc(STACK_SIZE);
-    if (child_stack == NULL) {
-        fprintf("malloc failed: %m\n");
+    stack = malloc(STACK_SIZE);
+    if (stack == NULL) {
+        fprintf(stderr, "malloc failed: %m\n");
         cleanup_sockets(sockets);
         return EXIT_FAILURE;
     }
@@ -335,9 +353,9 @@ int main(int argc, char **argv)
     // Clone
     child_pid = clone(
                         child_function,
-                        child_stack,
+                        stack,
                         SIGCHLD | CLONE_NEWCGROUP | CLONE_NEWIPC | CLONE_NEWNS | CLONE_NEWPID | CLONE_NEWUTS | CLONE_NEWNET,
-                        config
+                        &config
                     );
 
     /**

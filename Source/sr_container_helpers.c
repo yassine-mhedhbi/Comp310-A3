@@ -198,7 +198,7 @@ int setup_syscall_filters()
     }
 
     // Set SCMP_FLTATR_CTL_NNP attribute
-    filter_set_status = seccomp_rule_add(seccomp_ctx, SCMP_FLTATR_CTL_NNP, 0);
+    filter_set_status = seccomp_attr_set(seccomp_ctx, SCMP_FLTATR_CTL_NNP, 0);
     if (filter_set_status) {
         fprintf(stderr, "seccomp could not set attribute 'SCMP_FLTATR_CTL_NNP': %m\n");
         seccomp_release(seccomp_ctx);
