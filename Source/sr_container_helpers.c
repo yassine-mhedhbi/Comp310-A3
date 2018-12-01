@@ -19,7 +19,7 @@ int switch_child_root(const char *new_root, const char *put_old)
      * */
     if (syscall(SYS_pivot_root, new_root, put_old) == -1) {
         fprintf(stderr, "pivot_root failed: %m\n");
-        return -1;
+        return 1;
     }
 
     return 0;
@@ -43,6 +43,50 @@ int setup_child_capabilities()
      *      will indicate many capabilities. But after properly implementing this method if you run the same
      *      command inside your container you will see a smaller set of capabilities for [Bounding set]
      **/
+    int drop_caps[] = {
+                        CAP_AUDIT_CONTROL, CAP_AUDIT_READ, CAP_AUDIT_WRITE,
+                        CAP_BLOCK_SUSPEND, CAP_DAC_READ_SEARCH, CAP_FSETID,
+                        CAP_IPC_LOCK, CAP_MAC_ADMIN, CAP_MAC_OVERRIDE,
+                        CAP_MKNOD, CAP_SETFCAP, CAP_SYSLOG, CAP_SYS_ADMIN,
+                        CAP_SYS_BOOT, CAP_SYS_MODULE, CAP_SYS_NICE,
+                        CAP_SYS_RAWIO, CAP_SYS_RESOURCE, CAP_SYS_TIME,
+                        CAP_WAKE_ALARM
+                    };
+    size_t caps_to_drop = 20;
+
+    // Drop capabilities from ambient set
+    for (size_t i = 0; i < caps_to_drop; i++) {
+        if (prctl(PR_CAPBSET_DROP, drop_caps[i], 0, 0, 0)) {
+            fprintf(stderr, "prctl failed: %m\n");
+            return EXIT_FAILURE;
+        }
+    }
+
+    // Get capabilities of the current process
+    cap_t caps = cap_get_proc();
+    if (caps == NULL) {
+        perror("cap_get_proc");
+        return EXIT_FAILURE;
+    }
+
+    // Clear drop_caps from inheritable set
+    int clear_inh_set = cap_set_flag(caps, CAP_INHERITABLE, caps_to_drop, drop_caps, CAP_CLEAR);
+    if (clear_inh_set) {
+        perror("cap_set_flag");
+        cap_free(caps);
+        return EXIT_FAILURE;
+    }
+
+    // Set the new capability structure as the new inheritable set
+    int set_cap_set = cap_set_proc(caps);
+    if (set_cap_set) {
+        perror("cap_set_proc");
+        cap_free(caps);
+        return EXIT_FAILURE;
+    }
+
+    cap_free(caps);
+
     return 0;
 }
 
