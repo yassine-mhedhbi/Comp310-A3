@@ -98,7 +98,123 @@ int setup_child_capabilities()
  **/
 int setup_syscall_filters()
 {
-    return 0;
+    // Initialize a seccomp context
+    scmp_filter_ctx seccomp_ctx = seccomp_init(SCMP_ACT_ALLOW);
+    if (!seccomp_ctx) {
+        fprintf(stderr, "seccomp initialization failed: %m\n");
+        return EXIT_FAILURE;
+    }
+
+    /* Set up filters for syscalls
+       Implement:
+       - ptrace
+       - mbind
+       - migrate_pages
+       - move_pages
+       - unshare (only if the CLONE_NEWUSER flag is used)
+       - clone (only if the CLONE_NEWUSER flag is used)
+       - chmod (only if the S_ISUID or S_ISGID flags are used for the 'mode' argument)
+    */
+    int filter_set_status;
+
+    // ptrace
+    filter_set_status = seccomp_rule_add(
+                                            seccomp_ctx,
+                                            SCMP_FAIL,
+                                            SCMP_SYS(ptrace),
+                                            0
+                                        );
+    if (filter_set_status) {
+        fprintf(stderr, "seccomp could not add kill rule for 'ptrace': %m\n");
+        seccomp_release(seccomp_ctx);
+        return EXIT_FAILURE;
+    }
+
+    // mbind
+    filter_set_status = seccomp_rule_add(
+                                            seccomp_ctx,
+                                            SCMP_FAIL,
+                                            SCMP_SYS(mbind),
+                                            0
+                                        );
+    if (filter_set_status) {
+        fprintf(stderr, "seccomp could not add kill rule for 'mbind': %m\n");
+        seccomp_release(seccomp_ctx);
+        return EXIT_FAILURE;
+    }
+
+    // migrate_pages
+    filter_set_status = seccomp_rule_add(
+                                            seccomp_ctx,
+                                            SCMP_FAIL,
+                                            SCMP_SYS(migrate_pages),
+                                            0
+                                        );
+    if (filter_set_status) {
+        fprintf(stderr, "seccomp could not add kill rule for 'migrate_pages': %m\n");
+        seccomp_release(seccomp_ctx);
+        return EXIT_FAILURE;
+    }
+
+    // move_pages
+    filter_set_status = seccomp_rule_add(
+                                            seccomp_ctx,
+                                            SCMP_FAIL,
+                                            SCMP_SYS(move_pages),
+                                            0
+                                        );
+    if (filter_set_status) {
+        fprintf(stderr, "seccomp could not add kill rule for 'move_pages': %m\n");
+        seccomp_release(seccomp_ctx);
+        return EXIT_FAILURE;
+    }
+
+    // unshare
+    filter_set_status = seccomp_rule_add(
+                                            seccomp_ctx,
+                                            SCMP_FAIL,
+                                            SCMP_SYS(unshare),
+                                            1,
+                                            SCMP_A0(SCMP_CMP_MASKED_EQ, CLONE_NEWUSER, CLONE_NEWUSER)
+                                        );
+    if (filter_set_status) {
+        fprintf(stderr, "seccomp could not add kill rule for 'unshare': %m\n");
+        seccomp_release(seccomp_ctx);
+        return EXIT_FAILURE;
+    }
+
+    // clone
+    filter_set_status = seccomp_rule_add(
+                                            seccomp_ctx,
+                                            SCMP_FAIL,
+                                            SCMP_SYS(clone),
+                                            1,
+                                            SCMP_A2(SCMP_CMP_MASKED_EQ, CLONE_NEWUSER, CLONE_NEWUSER)
+                                        );
+    if (filter_set_status) {
+        fprintf(stderr, "seccomp could not add kill rule for 'clone': %m\n");
+        seccomp_release(seccomp_ctx);
+        return EXIT_FAILURE;
+    }
+
+    // Set SCMP_FLTATR_CTL_NNP attribute
+    filter_set_status = seccomp_rule_add(seccomp_ctx, SCMP_FLTATR_CTL_NNP, 0);
+    if (filter_set_status) {
+        fprintf(stderr, "seccomp could not set attribute 'SCMP_FLTATR_CTL_NNP': %m\n");
+        seccomp_release(seccomp_ctx);
+        return EXIT_FAILURE;
+    }
+
+    // Load the context into the kernel
+    filter_set_status = seccomp_load(seccomp_ctx);
+    if (filter_set_status) {
+        fprintf(stderr, "seccomp could not load the new context: %m\n");
+        seccomp_release(seccomp_ctx);
+        return EXIT_FAILURE;
+    }
+
+    seccomp_release(seccomp_ctx);
+    return EXIT_SUCCESS;
 }
 
 int setup_child_mounts(struct child_config *config)
