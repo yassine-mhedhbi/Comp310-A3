@@ -22,7 +22,7 @@ int main(int argc, char *argv[])
       return -1 ;
    }
 
-   int pid = clone(child_fn, stack + (1024 * 1024),  CLONE_NEWPID | CLONE_NEWUSER, NULL);
+   int pid = clone(child_fn, stack + (1024 * 1024),  CLONE_NEWPID, NULL);
    if ( pid < 0 ) {
         printf("ERROR: Unable to create the child process.\n");
         return -1;
