@@ -1,0 +1,68 @@
+
+
+TEST 1: As a root with pids, cpuset, cpu and memory controllers.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+root@2c9841138fca:/home# ./SNR_CONTAINER -m root -u 0 -H vong1 -p 79 -s 1 -C 10 -M 1000000 -c /bin/bash  
+####### > Checking if the host Linux version is compatible...4.15.0-39-generic on x86_64.
+####### > setting up SRContainer cgroups...blkio...pids...cpuset...cpu...memory...####### > setting up rlimit...successfully set up cgroup controls.
+####### > child process remounting root with MS_PRIVATE...successfull remount.
+####### > a bind mount is done on a newly created tmp directory...####### > changing root with pivot_root...inner mount done.
+####### > unmounting old_root /oldroot.hMWyZ4...successfully setup child mounts.
+####### > attempting a new user namespace...setting UID/GID mapping /proc/19496/uid_map...setting UID/GID mapping /proc/19496/gid_map...all done successfully.
+####### > switching to UID 0 / GID 0...setting up usernamespace done.
+bash: /root/.bashrc: Permission denied
+root@vong1:/# 
+root@vong1:/# cd home
+root@vong1:/home# hog
+Allocaion block 0 
+success ..
+Allocaion block 1 
+success ..
+Allocaion block 2 
+success ..
+Allocaion block 3 
+success ..
+Allocaion block 4 
+success ..
+Allocaion block 5 
+success ..
+Killed
+=============================================================================================
+root@vong1:/home# apt-get install wget
+E: Could not open lock file /var/lib/dpkg/lock - open (13: Permission denied)
+E: Unable to lock the administration directory (/var/lib/dpkg/), are you root?
+root@vong1:/home# 
+root@vong1:/home# id
+uid=0(root) gid=0(root) groups=0(root)
+root@vong1:/home# 
+=============================================================================================
+root@vong1:/home# chmod u+s a.out
+chmod: changing permissions of 'a.out': Operation not permitted
+=============================================================================================
+
+From host:
+
+
+root@2c9841138fca:/sys/fs/cgroup# 
+root@2c9841138fca:/sys/fs/cgroup# cd memory/vong1
+root@2c9841138fca:/sys/fs/cgroup/memory/vong1# cat memory.limit_in_bytes 
+999424
+root@2c9841138fca:/sys/fs/cgroup/memory/vong1# cd ../../cpu/vong1/
+root@2c9841138fca:/sys/fs/cgroup/cpu/vong1# cat cpu.shares
+10
+root@2c9841138fca:/sys/fs/cgroup/cpu/vong1# cd ../../cpuset/vong1/
+root@2c9841138fca:/sys/fs/cgroup/cpuset/vong1# cat cpuset.mems
+0
+root@2c9841138fca:/sys/fs/cgroup/cpuset/vong1# cat cpuset.cpus
+1
+root@2c9841138fca:/sys/fs/cgroup/cpuset/vong1# cd ../../pids/vong1/
+root@2c9841138fca:/sys/fs/cgroup/pids/vong1# cat pids.max
+79
+root@2c9841138fca:/sys/fs/cgroup/pids/vong1# 
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+Test 2:
+////////////////////////////////////////////////////////////////////////////////////////////////
+
