@@ -393,7 +393,7 @@ int main(int argc, char **argv)
     // Clone
     child_pid = clone(
                         child_function,
-                        stack,
+                        stack + STACK_SIZE,
                         SIGCHLD | CLONE_NEWCGROUP | CLONE_NEWIPC | CLONE_NEWNS | CLONE_NEWPID | CLONE_NEWUTS | CLONE_NEWNET,
                         &config
                     );
