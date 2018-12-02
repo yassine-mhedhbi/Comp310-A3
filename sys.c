@@ -5,6 +5,7 @@
 
 int main(){
 	unshare(CLONE_NEWPID | CLONE_NEWNS );
+	//unshare(CLONE_NEWPID | CLONE_NEWNS | CLONE_NEWUSER);
 	int rc = 0;
 	int pid = fork();
 	if (pid != 0) {
