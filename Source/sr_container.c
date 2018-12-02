@@ -31,41 +31,6 @@ struct cgroup_setting self_to_task = {
  **/
 struct cgroups_control *cgroups[6] = {
 
-    // Memory
-    & (struct cgroups_control) {
-        .control = CGRP_MEMORY_CONTROL,
-        .settings = (struct cgroup_setting *[8]) {
-            &self_to_task,             // must be added to all the new controls added
-            NULL                       // NULL at the end of the array
-        }
-    },
-
-    // CPU
-    & (struct cgroups_control) {
-        .control = CGRP_CPU_CONTROL,
-        .settings = (struct cgroup_setting *[8]) {
-            &self_to_task,             // must be added to all the new controls added
-            NULL                       // NULL at the end of the array
-        }
-    },
-
-    // Cpuset
-    & (struct cgroups_control) {
-        .control = CGRP_CPU_SET_CONTROL,
-        .settings = (struct cgroup_setting *[8]) {
-            &self_to_task,             // must be added to all the new controls added
-            NULL                       // NULL at the end of the array
-        }
-    },
-
-    // PIDs
-    & (struct cgroups_control) {
-        .control = CGRP_PIDS_CONTROL,
-        .settings = (struct cgroup_setting *[8]) {
-            &self_to_task,             // must be added to all the new controls added
-            NULL                       // NULL at the end of the array
-        }
-    },
     // blkio
     & (struct cgroups_control) {
         .control = CGRP_BLKIO_CONTROL,
@@ -127,9 +92,11 @@ int main(int argc, char **argv)
             config.argv = &argv[argc - config.argc];
             found_cflag = true;
             break;
+
         case 'm':
             config.mount_dir = optarg;
             break;
+
         case 'u':
             if (sscanf(optarg, "%d", &config.uid) != 1)
             {
@@ -138,7 +105,17 @@ int main(int argc, char **argv)
                 return EXIT_FAILURE;
             }
             break;
+
         case 'C':
+        	if (cgroups[1] == NULL) {
+        		cgroups[1] = & (struct cgroups_control) {
+        			.control = CGRP_CPU_CONTROL,
+        			.settings = (struct cgroup_setting *[8]) {
+            		&self_to_task,             // must be added to all the new controls added
+            		NULL                       // NULL at the end of the array
+        			}
+    			}
+        	}
             while (i<8) {
                 if (cgroups[1]->settings[i] == NULL)
                     break;
@@ -156,7 +133,17 @@ int main(int argc, char **argv)
 
             cgroups[1]->settings[i+1] = NULL;
             break;
+
         case 's':
+        	if (cgroups[2] == NULL) {
+        		cgroups[2] = & (struct cgroups_control) {
+        			.control = CGRP_CPU_SET_CONTROL,
+        			.settings = (struct cgroup_setting *[8]) {
+            		&self_to_task,             // must be added to all the new controls added
+            		NULL                       // NULL at the end of the array
+        			}
+    			}
+        	}
             while (i<8){
                 if (cgroups[2]->settings[i] == NULL)
                     break;
@@ -180,30 +167,48 @@ int main(int argc, char **argv)
             cgroups[2]->settings[i+2] = NULL;
             break;
         case 'M':
+        	if (cgroups[4] == NULL) {
+        		cgroups[4] = & (struct cgroups_control) {
+        			.control = CGRP_MEMORY_CONTROL,
+        			.settings = (struct cgroup_setting *[8]) {
+            		&self_to_task,             // must be added to all the new controls added
+            		NULL                       // NULL at the end of the array
+        			}
+    			}
+        	}
             while (i<8){
-                if (cgroups[0]->settings[i] == NULL)
+                if (cgroups[4]->settings[i] == NULL)
                     break;
-                else if (strcmp(cgroups[0]->settings[i]->name, "memory.limit_in_bytes") == 0)
+                else if (strcmp(cgroups[4]->settings[i]->name, "memory.limit_in_bytes") == 0)
                     break;
                 i++;
             }
-            cgroups[0]->settings[i] = & (struct cgroup_setting) {
+            cgroups[4]->settings[i] = & (struct cgroup_setting) {
                 .name = "memory.limit_in_bytes",
                 .value = ""
             };
 
-            stpcpy(cgroups[0]->settings[i]->value, optarg);
+            stpcpy(cgroups[4]->settings[i]->value, optarg);
 
-            cgroups[0]->settings[i+1] = & (struct cgroup_setting) {
+            cgroups[4]->settings[i+1] = & (struct cgroup_setting) {
                 .name = "memory.kmem.limit_in_bytes",
                 .value = ""
             };
 
-            stpcpy(cgroups[0]->settings[i+1]->value, optarg);
+            stpcpy(cgroups[4]->settings[i+1]->value, optarg);
 
-            cgroups[0]->settings[i+2] = NULL;
+            cgroups[4]->settings[i+2] = NULL;
             break;
         case 'p':
+        	if (cgroups[3] == NULL) {
+        		cgroups[3] = & (struct cgroups_control) {
+        			.control = CGRP_PIDS_CONTROL,
+        			.settings = (struct cgroup_setting *[8]) {
+            		&self_to_task,             // must be added to all the new controls added
+            		NULL                       // NULL at the end of the array
+        			}
+    			}
+        	}
             while (i<8){
                 if (cgroups[3]->settings[i] == NULL)
                     break;
@@ -223,39 +228,39 @@ int main(int argc, char **argv)
             break;
         case 'r':
             while (i<8){
-                if (cgroups[4]->settings[i] == NULL)
+                if (cgroups[0]->settings[i] == NULL)
                     break;
-                else if (strcmp(cgroups[4]->settings[i]->name, "blkio.throttle.read_bps_device") == 0)
+                else if (strcmp(cgroups[0]->settings[i]->name, "blkio.throttle.read_bps_device") == 0)
                     break;
                 i++;
             }
 
-            cgroups[4]->settings[i] = & (struct cgroup_setting) {
+            cgroups[0]->settings[i] = & (struct cgroup_setting) {
                 .name = "blkio.throttle.read_bps_device",
                 .value = ""
             };
 
-            stpcpy(cgroups[4]->settings[i]->value, optarg);
+            stpcpy(cgroups[0]->settings[i]->value, optarg);
 
-            cgroups[4]->settings[i+1] = NULL;
+            cgroups[0]->settings[i+1] = NULL;
             break;
         case 'w':
             while (i<8){
-                if (cgroups[4]->settings[i] == NULL)
+                if (cgroups[0]->settings[i] == NULL)
                     break;
-                else if (strcmp(cgroups[4]->settings[i]->name, "blkio.throttle.write_bps_device") == 0)
+                else if (strcmp(cgroups[0]->settings[i]->name, "blkio.throttle.write_bps_device") == 0)
                     break;
                 i++;
             }
 
-            cgroups[4]->settings[i] = & (struct cgroup_setting) {
+            cgroups[0]->settings[i] = & (struct cgroup_setting) {
                 .name = "blkio.throttle.write_bps_device",
                 .value = ""
             };
 
-            stpcpy(cgroups[4]->settings[i]->value, optarg);
+            stpcpy(cgroups[0]->settings[i]->value, optarg);
 
-            cgroups[4]->settings[i+1] = NULL;
+            cgroups[0]->settings[i+1] = NULL;
             break;
         case 'H':
             config.hostname = optarg;
