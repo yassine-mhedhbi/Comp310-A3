@@ -35,13 +35,14 @@ root@vong1:/home#
 root@vong1:/home# id
 uid=0(root) gid=0(root) groups=0(root)
 root@vong1:/home# 
-
-root@vong1:/home# chmod u+s a.out
+root@vong1:/home# chmod u+w a.out
+chmod: changing permissions of 'a.out': Operation not permitted
+root@vong1:/home# chmod o+w a.out
 chmod: changing permissions of 'a.out': Operation not permitted
 
 
-From host:
 
+From host:
 
 root@2c9841138fca:/sys/fs/cgroup# 
 root@2c9841138fca:/sys/fs/cgroup# cd memory/vong1
@@ -64,6 +65,7 @@ root@2c9841138fca:/sys/fs/cgroup/pids/vong1#
 Error:
   - permission denied
   - cannot install packages
+  - 2nd chmod ? 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
