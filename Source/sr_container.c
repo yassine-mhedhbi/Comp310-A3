@@ -31,15 +31,7 @@ struct cgroup_setting self_to_task = {
  **/
 
 /*
- * Implementation detail:
- * The order of things in the array will be:
- * 0. blkio
- * 1. cpu
- * 2. cpuset
- * 3. pid
- * 4. memory
- *
- * However, these are all NULL by default, and will be filled in as needed.
+ * This is a NULL-terminated list, and entries will be filled as needed.
  */
 struct cgroups_control *cgroups[6] = {
     // blkio
@@ -55,7 +47,7 @@ struct cgroups_control *cgroups[6] = {
             NULL                       // NULL at the end of the array
         }
     },
-    NULL, NULL, NULL, NULL, NULL       // NULL at the end of the array
+    NULL                               // NULL at the end of the array
 };
 
 
@@ -92,7 +84,8 @@ int main(int argc, char **argv)
     char *stack;
     while ((option = getopt(argc, argv, "c:m:u:C:s:p:M:r:w:H:")))
     {
-        int i = 0;
+        size_t n, i; // For cgroup_control and settings arrays
+
         if (found_cflag)
             break;
 
@@ -118,184 +111,266 @@ int main(int argc, char **argv)
             break;
 
         case 'C':
-            // Add cgroup control if it doesn't exist yet
-            if (cgroups[1] == NULL) {
-                cgroups[1] =    & (struct cgroups_control) {
-                                    .control = CGRP_CPU_CONTROL,
-                                    .settings = (struct cgroup_setting *[8]) {
-                                        &self_to_task,             // must be added to all the new controls added
-                                        NULL                       // NULL at the end of the array
-                                    }
-                                };
+            // Find cgroup control
+            for (n = 0; n < 5; n++) {
+                if (cgroups[n] == NULL)
+                    break;
+                else if (strcmp(cgroups[n]->control, CGRP_CPU_CONTROL) == 0)
+                    break;
+            }
+            // Add it to end of list if it doesn't exist
+            if (cgroups[n] == NULL) {
+                cgroups[n] = & (struct cgroups_control) {
+                                .control = CGRP_CPU_CONTROL,
+                                .settings = (struct cgroup_setting *[8]) {
+                                    &self_to_task,             // must be added to all the new controls added
+                                    NULL                       // NULL at the end of the array
+                                }
+                            };
+                // Make end of list NULL
+                cgroups[n+1] = NULL;
             }
 
             // Find settings spot (or empty spot if it's new)
-            while (i<8) {
-                if (cgroups[1]->settings[i] == NULL)
+            for (i = 0; i < 5; i++) {
+                if (cgroups[n]->settings[i] == NULL)
                     break;
-                else if (strcmp(cgroups[1]->settings[i]->name, "cpu.shares") == 0)
+                else if (strcmp(cgroups[n]->settings[i]->name, "cpu.shares") == 0)
                     break;
-                i++;
             }
-
-            // Add/modify the setting
-            cgroups[1]->settings[i] = & (struct cgroup_setting) {
-                .name = "cpu.shares",
-                .value = ""
-            };
+            // Add a setting spot to end of list if it doesn't exist
+            if (cgroups[n]->settings[i] == NULL) {
+                cgroups[n]->settings[i] = & (struct cgroup_setting) {
+                                                .name = "cpu.shares",
+                                                .value = ""         // placeholder, will be replaced
+                                            };
+                // Make end of list NULL
+                cgroups[n]->settings[i+1] = NULL;
+            }
+            // Set the setting
             stpcpy(cgroups[1]->settings[i]->value, optarg);
 
-            cgroups[1]->settings[i+1] = NULL;
             break;
-
         case 's':
-            // Add cgroup control if it doesn't exist yet
-            if (cgroups[2] == NULL) {
-                cgroups[2] =    & (struct cgroups_control) {
-                                    .control = CGRP_CPU_SET_CONTROL,
-                                    .settings = (struct cgroup_setting *[8]) {
-                                        // Include cpuset.{cpus,mems} before self_to_task to avoid errors
-                                        // Need to have default values before adding process to cgroup
-                                        & (struct cgroup_setting) {
-                                            .name = "cpuset.cpus",
-                                            .value = "0"                        // Placeholder, will be modified soon
-                                        },
-                                        & (struct cgroup_setting) {
-                                            .name = "cpuset.mems",
-                                            .value = "0"                        // need some default value because it isn't an option
-                                        },
-                                        &self_to_task,             // must be added to all the new controls added
-                                        NULL                       // NULL at the end of the array
-                                    }
-                                };
+            // Find cgroup control
+            for (n = 0; n < 5; n++) {
+                if (cgroups[n] == NULL)
+                    break;
+                else if (strcmp(cgroups[n]->control, CGRP_CPU_SET_CONTROL) == 0)
+                    break;
+            }
+            // Add it to end of list if it doesn't exist
+            if (cgroups[n] == NULL) {
+                cgroups[n] = & (struct cgroups_control) {
+                                .control = CGRP_CPU_SET_CONTROL,
+                                .settings = (struct cgroup_setting *[8]) {
+                                    // Include cpuset.{cpus,mems} before self_to_task to avoid errors
+                                    // Need to have default values before adding process to cgroup
+                                    & (struct cgroup_setting) {
+                                        .name = "cpuset.cpus",
+                                        .value = "0"                        // placeholder, will be replaced
+                                    },
+                                    & (struct cgroup_setting) {
+                                        .name = "cpuset.mems",
+                                        .value = "0"                        // need some default value because it isn't an option
+                                    },
+                                    &self_to_task,             // must be added to all the new controls added
+                                    NULL                       // NULL at the end of the array
+                                }
+                            };
+                // Make end of list NULL
+                cgroups[n+1] = NULL;
             }
 
             // Find settings spot (or empty spot if it's new)
-            while (i<8){
-                if (cgroups[2]->settings[i] == NULL)
+            // For cpuset.cpus
+            for (i = 0; i < 5; i++) {
+                if (cgroups[n]->settings[i] == NULL)
                     break;
-                else if (strcmp(cgroups[2]->settings[i]->name, "cpuset.cpus") == 0)
+                else if (strcmp(cgroups[n]->settings[i]->name, "cpuset.cpus") == 0)
                     break;
-                i++;
+            }
+            // Add a setting spot to end of list if it doesn't exist
+            if (cgroups[n]->settings[i] == NULL) {
+                cgroups[n]->settings[i] = & (struct cgroup_setting) {
+                                                .name = "cpuset.cpus",
+                                                .value = ""         // placeholder, will be replaced
+                                            };
+                // Make end of list NULL
+                cgroups[n]->settings[i+1] = NULL;
+            }
+            // Set the setting
+            stpcpy(cgroups[1]->settings[i]->value, optarg);
+
+            // For cpuset.mems
+            for (i = 0; i < 5; i++) {
+                if (cgroups[n]->settings[i] == NULL)
+                    break;
+                else if (strcmp(cgroups[n]->settings[i]->name, "cpuset.mems") == 0)
+                    break;
+            }
+            // Add a setting spot to end of list if it doesn't exist
+            if (cgroups[n]->settings[i] == NULL) {
+                cgroups[n]->settings[i] = & (struct cgroup_setting) {
+                                                .name = "cpuset.mems",
+                                                .value = "0"         // need some default value because it isn't an option
+                                            };
+                // Make end of list NULL
+                cgroups[n]->settings[i+1] = NULL;
             }
 
-            // Add/modify the setting
-            cgroups[2]->settings[i] = & (struct cgroup_setting) {
-                .name = "cpuset.cpus",
-                .value = ""
-            };
-            stpcpy(cgroups[2]->settings[i]->value, optarg);
-
-            cgroups[2]->settings[i+1] = & (struct cgroup_setting) {
-                .name = "cpuset.mems",
-                .value = "0"                        // need some default value because it isn't an option
-            };
-
-            cgroups[2]->settings[i+2] = NULL;
             break;
         case 'M':
-            // Add cgroup control if it doesn't exist yet
-            if (cgroups[4] == NULL) {
-                cgroups[4] =    & (struct cgroups_control) {
-                                    .control = CGRP_MEMORY_CONTROL,
-                                    .settings = (struct cgroup_setting *[8]) {
-                                        &self_to_task,             // must be added to all the new controls added
-                                        NULL                       // NULL at the end of the array
-                                    }
-                                };
+            // Find cgroup control
+            for (n = 0; n < 5; n++) {
+                if (cgroups[n] == NULL)
+                    break;
+                else if (strcmp(cgroups[n]->control, CGRP_MEMORY_CONTROL) == 0)
+                    break;
+            }
+            // Add it to end of list if it doesn't exist
+            if (cgroups[n] == NULL) {
+                cgroups[n] = & (struct cgroups_control) {
+                                .control = CGRP_MEMORY_CONTROL,
+                                .settings = (struct cgroup_setting *[8]) {
+                                    &self_to_task,             // must be added to all the new controls added
+                                    NULL                       // NULL at the end of the array
+                                }
+                            };
+                // Make end of list NULL
+                cgroups[n+1] = NULL;
             }
 
             // Find settings spot (or empty spot if it's new)
-            while (i<8){
-                if (cgroups[4]->settings[i] == NULL)
+            // For memory.limit_in_bytes
+            for (i = 0; i < 5; i++) {
+                if (cgroups[n]->settings[i] == NULL)
                     break;
-                else if (strcmp(cgroups[4]->settings[i]->name, "memory.limit_in_bytes") == 0)
+                else if (strcmp(cgroups[n]->settings[i]->name, "memory.limit_in_bytes") == 0)
                     break;
-                i++;
             }
+            // Add a setting spot to end of list if it doesn't exist
+            if (cgroups[n]->settings[i] == NULL) {
+                cgroups[n]->settings[i] = & (struct cgroup_setting) {
+                                                .name = "memory.limit_in_bytes",
+                                                .value = ""         // placeholder, will be replaced
+                                            };
+                // Make end of list NULL
+                cgroups[n]->settings[i+1] = NULL;
+            }
+            // Set the setting
+            stpcpy(cgroups[1]->settings[i]->value, optarg);
 
-            // Add/modify the setting
-            cgroups[4]->settings[i] = & (struct cgroup_setting) {
-                .name = "memory.limit_in_bytes",
-                .value = ""
-            };
-            stpcpy(cgroups[4]->settings[i]->value, optarg);
+            // For memory.kmem.limit_in_bytes
+            for (i = 0; i < 5; i++) {
+                if (cgroups[n]->settings[i] == NULL)
+                    break;
+                else if (strcmp(cgroups[n]->settings[i]->name, "memory.kmem.limit_in_bytes") == 0)
+                    break;
+            }
+            // Add a setting spot to end of list if it doesn't exist
+            if (cgroups[n]->settings[i] == NULL) {
+                cgroups[n]->settings[i] = & (struct cgroup_setting) {
+                                                .name = "memory.kmem.limit_in_bytes",
+                                                .value = ""         // placeholder, will be replaced
+                                            };
+                // Make end of list NULL
+                cgroups[n]->settings[i+1] = NULL;
+            }
+            // Set the setting
+            stpcpy(cgroups[1]->settings[i]->value, optarg);
 
-            cgroups[4]->settings[i+1] = & (struct cgroup_setting) {
-                .name = "memory.kmem.limit_in_bytes",
-                .value = ""
-            };
-            stpcpy(cgroups[4]->settings[i+1]->value, optarg);
-
-            cgroups[4]->settings[i+2] = NULL;
             break;
         case 'p':
-            // Add cgroup control if it doesn't exist yet
-            if (cgroups[3] == NULL) {
-                cgroups[3] =    & (struct cgroups_control) {
-                                    .control = CGRP_PIDS_CONTROL,
-                                    .settings = (struct cgroup_setting *[8]) {
-                                        &self_to_task,             // must be added to all the new controls added
-                                        NULL                       // NULL at the end of the array
-                                    }
-                                };
+            // Find cgroup control
+            for (n = 0; n < 5; n++) {
+                if (cgroups[n] == NULL)
+                    break;
+                else if (strcmp(cgroups[n]->control, CGRP_PIDS_CONTROL) == 0)
+                    break;
+            }
+            // Add it to end of list if it doesn't exist
+            if (cgroups[n] == NULL) {
+                cgroups[n] = & (struct cgroups_control) {
+                                .control = CGRP_PIDS_CONTROL,
+                                .settings = (struct cgroup_setting *[8]) {
+                                    &self_to_task,             // must be added to all the new controls added
+                                    NULL                       // NULL at the end of the array
+                                }
+                            };
+                // Make end of list NULL
+                cgroups[n+1] = NULL;
             }
 
             // Find settings spot (or empty spot if it's new)
-            while (i<8){
-                if (cgroups[3]->settings[i] == NULL)
+            for (i = 0; i < 5; i++) {
+                if (cgroups[n]->settings[i] == NULL)
                     break;
-                else if (strcmp(cgroups[3]->settings[i]->name, "pids.max") == 0)
+                else if (strcmp(cgroups[n]->settings[i]->name, "pids.max") == 0)
                     break;
-                i++;
             }
+            // Add a setting spot to end of list if it doesn't exist
+            if (cgroups[n]->settings[i] == NULL) {
+                cgroups[n]->settings[i] = & (struct cgroup_setting) {
+                                                .name = "pids.max",
+                                                .value = ""         // placeholder, will be replaced
+                                            };
+                // Make end of list NULL
+                cgroups[n]->settings[i+1] = NULL;
+            }
+            // Set the setting
+            stpcpy(cgroups[1]->settings[i]->value, optarg);
 
-            // Add/modify the setting
-            cgroups[3]->settings[i] = & (struct cgroup_setting) {
-                .name = "pids.max",
-                .value = ""
-            };
-            stpcpy(cgroups[3]->settings[i]->value, optarg);
-
-            cgroups[3]->settings[i+1] = NULL;
             break;
         case 'r':
+            // Find cgroup control
+            // It is hardcoded to be the first
+            n = 0;
+
             // Find settings spot (or empty spot if it's new)
-            while (i<8){
-                if (cgroups[0]->settings[i] == NULL)
+            for (i = 0; i < 5; i++) {
+                if (cgroups[n]->settings[i] == NULL)
                     break;
-                else if (strcmp(cgroups[0]->settings[i]->name, "blkio.throttle.read_bps_device") == 0)
+                else if (strcmp(cgroups[n]->settings[i]->name, "blkio.throttle.read_bps_device") == 0)
                     break;
-                i++;
             }
+            // Add a setting spot to end of list if it doesn't exist
+            if (cgroups[n]->settings[i] == NULL) {
+                cgroups[n]->settings[i] = & (struct cgroup_setting) {
+                                                .name = "blkio.throttle.read_bps_device",
+                                                .value = ""         // placeholder, will be replaced
+                                            };
+                // Make end of list NULL
+                cgroups[n]->settings[i+1] = NULL;
+            }
+            // Set the setting
+            stpcpy(cgroups[1]->settings[i]->value, optarg);
 
-            // Add/modify the setting
-            cgroups[0]->settings[i] = & (struct cgroup_setting) {
-                .name = "blkio.throttle.read_bps_device",
-                .value = ""
-            };
-            stpcpy(cgroups[0]->settings[i]->value, optarg);
-
-            cgroups[0]->settings[i+1] = NULL;
             break;
         case 'w':
+            // Find cgroup control
+            // It is hardcoded to be the first
+            n = 0;
+
             // Find settings spot (or empty spot if it's new)
-            while (i<8){
-                if (cgroups[0]->settings[i] == NULL)
+            for (i = 0; i < 5; i++) {
+                if (cgroups[n]->settings[i] == NULL)
                     break;
-                else if (strcmp(cgroups[0]->settings[i]->name, "blkio.throttle.write_bps_device") == 0)
+                else if (strcmp(cgroups[n]->settings[i]->name, "blkio.throttle.write_bps_device") == 0)
                     break;
-                i++;
             }
+            // Add a setting spot to end of list if it doesn't exist
+            if (cgroups[n]->settings[i] == NULL) {
+                cgroups[n]->settings[i] = & (struct cgroup_setting) {
+                                                .name = "blkio.throttle.write_bps_device",
+                                                .value = ""         // placeholder, will be replaced
+                                            };
+                // Make end of list NULL
+                cgroups[n]->settings[i+1] = NULL;
+            }
+            // Set the setting
+            stpcpy(cgroups[1]->settings[i]->value, optarg);
 
-            // Add/modify the setting
-            cgroups[0]->settings[i] = & (struct cgroup_setting) {
-                .name = "blkio.throttle.write_bps_device",
-                .value = ""
-            };
-            stpcpy(cgroups[0]->settings[i]->value, optarg);
-
-            cgroups[0]->settings[i+1] = NULL;
             break;
         case 'H':
             config.hostname = optarg;
