@@ -197,6 +197,33 @@ int setup_syscall_filters()
         return EXIT_FAILURE;
     }
 
+    // chmod S_ISUID
+    filter_set_status = seccomp_rule_add(
+                                            seccomp_ctx,
+                                            SCMP_ACT_KILL,
+                                            SCMP_SYS(chmod),
+                                            1,
+                                            SCMP_A1(SCMP_CMP_MASKED_EQ, S_ISUID, S_ISUID)
+                                        );
+    if (filter_set_status) {
+        fprintf(stderr, "seccomp could not add kill rule for 'chmod': %m\n");
+        seccomp_release(seccomp_ctx);
+        return EXIT_FAILURE;
+    }
+    // chmod S_ISGID
+    filter_set_status = seccomp_rule_add(
+                                            seccomp_ctx,
+                                            SCMP_ACT_KILL,
+                                            SCMP_SYS(chmod),
+                                            1,
+                                            SCMP_A1(SCMP_CMP_MASKED_EQ, S_ISGID, S_ISGID)
+                                        );
+    if (filter_set_status) {
+        fprintf(stderr, "seccomp could not add kill rule for 'chmod': %m\n");
+        seccomp_release(seccomp_ctx);
+        return EXIT_FAILURE;
+    }
+
     // Set SCMP_FLTATR_CTL_NNP attribute
     filter_set_status = seccomp_attr_set(seccomp_ctx, SCMP_FLTATR_CTL_NNP, 0);
     if (filter_set_status) {
