@@ -173,7 +173,7 @@ int main(int argc, char **argv)
             stpcpy(cgroups[2]->settings[i]->value, optarg);
 
             cgroups[2]->settings[i+1] = & (struct cgroup_setting) {
-                .name = "cpuset.mem",
+                .name = "cpuset.mems",
                 .value = "0"
             };
 

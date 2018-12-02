@@ -120,7 +120,7 @@ int setup_syscall_filters()
     // ptrace
     filter_set_status = seccomp_rule_add(
                                             seccomp_ctx,
-                                            SCMP_FAIL,
+                                            SCMP_ACT_KILL,
                                             SCMP_SYS(ptrace),
                                             0
                                         );
@@ -133,7 +133,7 @@ int setup_syscall_filters()
     // mbind
     filter_set_status = seccomp_rule_add(
                                             seccomp_ctx,
-                                            SCMP_FAIL,
+                                            SCMP_ACT_KILL,
                                             SCMP_SYS(mbind),
                                             0
                                         );
@@ -146,7 +146,7 @@ int setup_syscall_filters()
     // migrate_pages
     filter_set_status = seccomp_rule_add(
                                             seccomp_ctx,
-                                            SCMP_FAIL,
+                                            SCMP_ACT_KILL,
                                             SCMP_SYS(migrate_pages),
                                             0
                                         );
@@ -159,7 +159,7 @@ int setup_syscall_filters()
     // move_pages
     filter_set_status = seccomp_rule_add(
                                             seccomp_ctx,
-                                            SCMP_FAIL,
+                                            SCMP_ACT_KILL,
                                             SCMP_SYS(move_pages),
                                             0
                                         );
@@ -172,7 +172,7 @@ int setup_syscall_filters()
     // unshare
     filter_set_status = seccomp_rule_add(
                                             seccomp_ctx,
-                                            SCMP_FAIL,
+                                            SCMP_ACT_KILL,
                                             SCMP_SYS(unshare),
                                             1,
                                             SCMP_A0(SCMP_CMP_MASKED_EQ, CLONE_NEWUSER, CLONE_NEWUSER)
@@ -186,7 +186,7 @@ int setup_syscall_filters()
     // clone
     filter_set_status = seccomp_rule_add(
                                             seccomp_ctx,
-                                            SCMP_FAIL,
+                                            SCMP_ACT_KILL,
                                             SCMP_SYS(clone),
                                             1,
                                             SCMP_A2(SCMP_CMP_MASKED_EQ, CLONE_NEWUSER, CLONE_NEWUSER)
