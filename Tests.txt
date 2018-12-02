@@ -62,11 +62,7 @@ root@2c9841138fca:/sys/fs/cgroup/pids/vong1# cat pids.max
 root@2c9841138fca:/sys/fs/cgroup/pids/vong1# 
 
 ================================================================================================
-Error:
-  - permission denied
-  - cannot install packages
-  - 2nd chmod ? 
-
+ ** works fine
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -91,15 +87,14 @@ root@2c9841138fca:/sys/fs/cgroup/blkio/test1# cat blkio.throttle.write_bps_devic
 8:0 1000
 
 =====================================================================================================
-Error:
- - permission denied.
+ ** all good
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 test 3
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 From 1st shell:
 
-root@2c9841138fca:/home# ./SNR_CONTAINER -m root1 -u 0 -H side1 -C 7 -M 10000000  -p 15 -c /bin/bash 
+root@2c9841138fca:/home# ./SNR_CONTAINER -m root1 -u 0 -H side1 -C 7 -M 10000000 -s 0 -p 15 -c /bin/bash 
 ####### > Checking if the host Linux version is compatible...4.15.0-39-generic on x86_64.
 ####### > setting up SRContainer cgroups...blkio...cpu...memory...pids...####### > setting up rlimit...successfully set up cgroup controls.
 ####### > child process remounting root with MS_PRIVATE...successfull remount.
@@ -112,7 +107,7 @@ root@side1:/#
 
 From 2nd shell:
 
-root@2c9841138fca:/home# ./SNR_CONTAINER -m root -u 0 -H side2 -C 3 -M 10000000  -p 15 -c /bin/bash
+root@2c9841138fca:/home# ./SNR_CONTAINER -m root -u 0 -H side2 -C 3 -M 10000000 -s 0 -p 15 -c /bin/bash
 ####### > Checking if the host Linux version is compatible...4.15.0-39-generic on x86_64.
 ####### > setting up SRContainer cgroups...blkio...cpu...memory...pids...####### > setting up rlimit...successfully set up cgroup controls.
 ####### > child process remounting root with MS_PRIVATE...successfull remount.
@@ -130,16 +125,12 @@ root@2c9841138fca:/sys/fs/cgroup/cpu/side1# cat cpu.shares
 root@2c9841138fca:/sys/fs/cgroup/cpu/side1# cd ../side2
 root@2c9841138fca:/sys/fs/cgroup/cpu/side2# cat cpu.shares
 3
-root@side1:/# apt-get install stress
-E: Could not open lock file /var/lib/dpkg/lock - open (13: Permission denied)
-E: Unable to lock the administration directory (/var/lib/dpkg/), are you root?
 ===============================================================================================================
-Error:
- - Permission denied
+ works fine, picture attached to show cpu shares using stress.
  
  
  ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
  
- Michael Tested capabalities: double heck the permission denied error
+ Michael Tested capabalities
 
 TO DO : SYSCALL FILTERNING.
