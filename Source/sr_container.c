@@ -148,7 +148,7 @@ int main(int argc, char **argv)
                 cgroups[n]->settings[i+1] = NULL;
             }
             // Set the setting
-            stpcpy(cgroups[1]->settings[i]->value, optarg);
+            stpcpy(cgroups[n]->settings[i]->value, optarg);
 
             break;
         case 's':
@@ -200,7 +200,7 @@ int main(int argc, char **argv)
                 cgroups[n]->settings[i+1] = NULL;
             }
             // Set the setting
-            stpcpy(cgroups[1]->settings[i]->value, optarg);
+            stpcpy(cgroups[n]->settings[i]->value, optarg);
 
             // For cpuset.mems
             for (i = 0; i < 5; i++) {
@@ -259,7 +259,7 @@ int main(int argc, char **argv)
                 cgroups[n]->settings[i+1] = NULL;
             }
             // Set the setting
-            stpcpy(cgroups[1]->settings[i]->value, optarg);
+            stpcpy(cgroups[n]->settings[i]->value, optarg);
 
             // For memory.kmem.limit_in_bytes
             for (i = 0; i < 5; i++) {
@@ -278,7 +278,7 @@ int main(int argc, char **argv)
                 cgroups[n]->settings[i+1] = NULL;
             }
             // Set the setting
-            stpcpy(cgroups[1]->settings[i]->value, optarg);
+            stpcpy(cgroups[n]->settings[i]->value, optarg);
 
             break;
         case 'p':
@@ -319,7 +319,7 @@ int main(int argc, char **argv)
                 cgroups[n]->settings[i+1] = NULL;
             }
             // Set the setting
-            stpcpy(cgroups[1]->settings[i]->value, optarg);
+            stpcpy(cgroups[n]->settings[i]->value, optarg);
 
             break;
         case 'r':
@@ -344,7 +344,7 @@ int main(int argc, char **argv)
                 cgroups[n]->settings[i+1] = NULL;
             }
             // Set the setting
-            stpcpy(cgroups[1]->settings[i]->value, optarg);
+            stpcpy(cgroups[n]->settings[i]->value, optarg);
 
             break;
         case 'w':
@@ -369,7 +369,7 @@ int main(int argc, char **argv)
                 cgroups[n]->settings[i+1] = NULL;
             }
             // Set the setting
-            stpcpy(cgroups[1]->settings[i]->value, optarg);
+            stpcpy(cgroups[n]->settings[i]->value, optarg);
 
             break;
         case 'H':
