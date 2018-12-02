@@ -189,7 +189,7 @@ int setup_syscall_filters()
                                             SCMP_ACT_KILL,
                                             SCMP_SYS(clone),
                                             1,
-                                            SCMP_A2(SCMP_CMP_MASKED_EQ, CLONE_NEWUSER, CLONE_NEWUSER)
+                                            SCMP_A0(SCMP_CMP_MASKED_EQ, CLONE_NEWUSER, CLONE_NEWUSER)
                                         );
     if (filter_set_status) {
         fprintf(stderr, "seccomp could not add kill rule for 'clone': %m\n");
@@ -210,6 +210,30 @@ int setup_syscall_filters()
         seccomp_release(seccomp_ctx);
         return EXIT_FAILURE;
     }
+    filter_set_status = seccomp_rule_add(
+                                            seccomp_ctx,
+                                            SCMP_ACT_KILL,
+                                            SCMP_SYS(fchmod),
+                                            1,
+                                            SCMP_A1(SCMP_CMP_MASKED_EQ, S_ISUID, S_ISUID)
+                                        );
+    if (filter_set_status) {
+        fprintf(stderr, "seccomp could not add kill rule for 'chmod': %m\n");
+        seccomp_release(seccomp_ctx);
+        return EXIT_FAILURE;
+    }
+    filter_set_status = seccomp_rule_add(
+                                            seccomp_ctx,
+                                            SCMP_ACT_KILL,
+                                            SCMP_SYS(fchmodat),
+                                            1,
+                                            SCMP_A2(SCMP_CMP_MASKED_EQ, S_ISUID, S_ISUID)
+                                        );
+    if (filter_set_status) {
+        fprintf(stderr, "seccomp could not add kill rule for 'chmod': %m\n");
+        seccomp_release(seccomp_ctx);
+        return EXIT_FAILURE;
+    }
     // chmod S_ISGID
     filter_set_status = seccomp_rule_add(
                                             seccomp_ctx,
@@ -217,6 +241,30 @@ int setup_syscall_filters()
                                             SCMP_SYS(chmod),
                                             1,
                                             SCMP_A1(SCMP_CMP_MASKED_EQ, S_ISGID, S_ISGID)
+                                        );
+    if (filter_set_status) {
+        fprintf(stderr, "seccomp could not add kill rule for 'chmod': %m\n");
+        seccomp_release(seccomp_ctx);
+        return EXIT_FAILURE;
+    }
+    filter_set_status = seccomp_rule_add(
+                                            seccomp_ctx,
+                                            SCMP_ACT_KILL,
+                                            SCMP_SYS(fchmod),
+                                            1,
+                                            SCMP_A1(SCMP_CMP_MASKED_EQ, S_ISGID, S_ISGID)
+                                        );
+    if (filter_set_status) {
+        fprintf(stderr, "seccomp could not add kill rule for 'chmod': %m\n");
+        seccomp_release(seccomp_ctx);
+        return EXIT_FAILURE;
+    }
+    filter_set_status = seccomp_rule_add(
+                                            seccomp_ctx,
+                                            SCMP_ACT_KILL,
+                                            SCMP_SYS(fchmodat),
+                                            1,
+                                            SCMP_A2(SCMP_CMP_MASKED_EQ, S_ISGID, S_ISGID)
                                         );
     if (filter_set_status) {
         fprintf(stderr, "seccomp could not add kill rule for 'chmod': %m\n");
