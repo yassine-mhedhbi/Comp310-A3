@@ -101,22 +101,40 @@ Recap
 -----
 
 ✅ Setting up cgroups/hostname flags;
+
 ✅ Implementing child process logic;
+
 ✅ Proper usage of​ pivot_root()​;
+
 ✅ Implementing capabilities;
+
 ✅ Implementing syscall filtering.
+
+---
 
 ✅ Testing all flags, both alone and together;
 ✅ Testing capabilities using `capsh`.
 
+---
+
 ✅ Testing `ptrace`;
+
 ✅ Testing `mbind`;
+
 ✅ Testing `migrate_pages`;
+
 ✅ Testing `move_pages`;
+
 ✅ Testing `unshare` without the `CLONE_NEWUSER` flag;
+
 ✅ Testing `unshare` with the `CLONE_NEWUSER` flag;
+
 ✅ Testing `clone` without the `CLONE_NEWUSER` flag;
+
 ✅ Testing `clone` with the `CLONE_NEWUSER` flag;
+
 ✅ Testing `chmod` without the `S_ISUID` and `S_ISGID` flags;
+
 ✅ Testing `chmod` with the `S_ISUID` or the `S_ISGID` flag;
+
 ✅ Testing `fchmod` and `fchmodat` (and the `chmod` binary) the same way as `chmod`.
