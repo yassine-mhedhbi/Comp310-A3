@@ -43,7 +43,7 @@ alone and together.
 2 Creating child process
 ------------------------
 
-Standard `clone` shit. Flags used are:
+Standard `clone` stuff. Flags used are:
 
 * `SIGCHLD` - as requested, for signaling when the child dies;
 * `CLONE_NEWCGROUP` - put the child in a new cgroup namespace;
