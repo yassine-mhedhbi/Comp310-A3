@@ -19,7 +19,7 @@ int switch_child_root(const char *new_root, const char *put_old)
      * */
     if (syscall(SYS_pivot_root, new_root, put_old) == -1) {
         fprintf(stderr, "pivot_root failed: %m\n");
-        return 1;
+        return -1;
     }
 
     return 0;
@@ -58,31 +58,32 @@ int setup_child_capabilities()
     for (size_t i = 0; i < caps_to_drop; i++) {
         if (prctl(PR_CAPBSET_DROP, drop_caps[i], 0, 0, 0)) {
             fprintf(stderr, "prctl failed: %m\n");
-            return EXIT_FAILURE;
+            return -1;
         }
     }
 
     // Get capabilities of the current process
     cap_t caps = cap_get_proc();
     if (caps == NULL) {
-        perror("cap_get_proc");
-        return EXIT_FAILURE;
+        fprintf(stderr, "cap_get_proc failed: %m\n");
+        return -1;
     }
 
     // Clear drop_caps from inheritable set
-    int clear_inh_set = cap_set_flag(caps, CAP_INHERITABLE, caps_to_drop, drop_caps, CAP_CLEAR);
+    int clear_inh_set = cap_set_flag(caps, CAP_INHERITABLE, caps_to_drop,
+                                        drop_caps, CAP_CLEAR);
     if (clear_inh_set) {
-        perror("cap_set_flag");
+        fprintf(stderr, "cap_set_flag failed: %m\n");
         cap_free(caps);
-        return EXIT_FAILURE;
+        return -1;
     }
 
     // Set the new capability structure as the new inheritable set
     int set_cap_set = cap_set_proc(caps);
     if (set_cap_set) {
-        perror("cap_set_proc");
+        fprintf(stderr, "cap_set_proc failed: %m\n");
         cap_free(caps);
-        return EXIT_FAILURE;
+        return -1;
     }
 
     cap_free(caps);
@@ -102,7 +103,7 @@ int setup_syscall_filters()
     scmp_filter_ctx seccomp_ctx = seccomp_init(SCMP_ACT_ALLOW);
     if (!seccomp_ctx) {
         fprintf(stderr, "seccomp initialization failed: %m\n");
-        return EXIT_FAILURE;
+        return -1;
     }
 
     /* Set up filters for syscalls
@@ -127,7 +128,7 @@ int setup_syscall_filters()
     if (filter_set_status) {
         fprintf(stderr, "seccomp could not add kill rule for 'ptrace': %m\n");
         seccomp_release(seccomp_ctx);
-        return EXIT_FAILURE;
+        return -1;
     }
 
     // mbind
@@ -140,7 +141,7 @@ int setup_syscall_filters()
     if (filter_set_status) {
         fprintf(stderr, "seccomp could not add kill rule for 'mbind': %m\n");
         seccomp_release(seccomp_ctx);
-        return EXIT_FAILURE;
+        return -1;
     }
 
     // migrate_pages
@@ -153,7 +154,7 @@ int setup_syscall_filters()
     if (filter_set_status) {
         fprintf(stderr, "seccomp could not add kill rule for 'migrate_pages': %m\n");
         seccomp_release(seccomp_ctx);
-        return EXIT_FAILURE;
+        return -1;
     }
 
     // move_pages
@@ -166,7 +167,7 @@ int setup_syscall_filters()
     if (filter_set_status) {
         fprintf(stderr, "seccomp could not add kill rule for 'move_pages': %m\n");
         seccomp_release(seccomp_ctx);
-        return EXIT_FAILURE;
+        return -1;
     }
 
     // unshare
@@ -180,10 +181,13 @@ int setup_syscall_filters()
     if (filter_set_status) {
         fprintf(stderr, "seccomp could not add kill rule for 'unshare': %m\n");
         seccomp_release(seccomp_ctx);
-        return EXIT_FAILURE;
+        return -1;
     }
 
     // clone
+    // note: the clone syscall has a different order of arguments than the clone
+    // glibc wrapper function. it's impossible to google for this, but you can
+    // see it when you look at the glibc or kernel source.
     filter_set_status = seccomp_rule_add(
                                             seccomp_ctx,
                                             SCMP_ACT_KILL,
@@ -194,10 +198,11 @@ int setup_syscall_filters()
     if (filter_set_status) {
         fprintf(stderr, "seccomp could not add kill rule for 'clone': %m\n");
         seccomp_release(seccomp_ctx);
-        return EXIT_FAILURE;
+        return -1;
     }
 
     // chmod S_ISUID
+    // need to block three syscalls: chmod, fchmod, and fchmodat
     filter_set_status = seccomp_rule_add(
                                             seccomp_ctx,
                                             SCMP_ACT_KILL,
@@ -208,7 +213,7 @@ int setup_syscall_filters()
     if (filter_set_status) {
         fprintf(stderr, "seccomp could not add kill rule for 'chmod': %m\n");
         seccomp_release(seccomp_ctx);
-        return EXIT_FAILURE;
+        return -1;
     }
     filter_set_status = seccomp_rule_add(
                                             seccomp_ctx,
@@ -220,7 +225,7 @@ int setup_syscall_filters()
     if (filter_set_status) {
         fprintf(stderr, "seccomp could not add kill rule for 'chmod': %m\n");
         seccomp_release(seccomp_ctx);
-        return EXIT_FAILURE;
+        return -1;
     }
     filter_set_status = seccomp_rule_add(
                                             seccomp_ctx,
@@ -232,9 +237,10 @@ int setup_syscall_filters()
     if (filter_set_status) {
         fprintf(stderr, "seccomp could not add kill rule for 'chmod': %m\n");
         seccomp_release(seccomp_ctx);
-        return EXIT_FAILURE;
+        return -1;
     }
     // chmod S_ISGID
+    // need to block three syscalls: chmod, fchmod, and fchmodat
     filter_set_status = seccomp_rule_add(
                                             seccomp_ctx,
                                             SCMP_ACT_KILL,
@@ -245,7 +251,7 @@ int setup_syscall_filters()
     if (filter_set_status) {
         fprintf(stderr, "seccomp could not add kill rule for 'chmod': %m\n");
         seccomp_release(seccomp_ctx);
-        return EXIT_FAILURE;
+        return -1;
     }
     filter_set_status = seccomp_rule_add(
                                             seccomp_ctx,
@@ -257,7 +263,7 @@ int setup_syscall_filters()
     if (filter_set_status) {
         fprintf(stderr, "seccomp could not add kill rule for 'chmod': %m\n");
         seccomp_release(seccomp_ctx);
-        return EXIT_FAILURE;
+        return -1;
     }
     filter_set_status = seccomp_rule_add(
                                             seccomp_ctx,
@@ -269,7 +275,7 @@ int setup_syscall_filters()
     if (filter_set_status) {
         fprintf(stderr, "seccomp could not add kill rule for 'chmod': %m\n");
         seccomp_release(seccomp_ctx);
-        return EXIT_FAILURE;
+        return -1;
     }
 
     // Set SCMP_FLTATR_CTL_NNP attribute
@@ -277,7 +283,7 @@ int setup_syscall_filters()
     if (filter_set_status) {
         fprintf(stderr, "seccomp could not set attribute 'SCMP_FLTATR_CTL_NNP': %m\n");
         seccomp_release(seccomp_ctx);
-        return EXIT_FAILURE;
+        return -1;
     }
 
     // Load the context into the kernel
@@ -285,11 +291,11 @@ int setup_syscall_filters()
     if (filter_set_status) {
         fprintf(stderr, "seccomp could not load the new context: %m\n");
         seccomp_release(seccomp_ctx);
-        return EXIT_FAILURE;
+        return -1;
     }
 
     seccomp_release(seccomp_ctx);
-    return EXIT_SUCCESS;
+    return 0;
 }
 
 int setup_child_mounts(struct child_config *config)
